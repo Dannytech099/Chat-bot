@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NexusOS — Interactive Freelancer Business Ecosystem Preview</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { background-color: #06070f; color: #f8fafc; font-family: Inter, system-ui, -apple-system, sans-serif; }
+    .glass { background: rgba(15, 23, 42, 0.58); backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.1); }
+    .grad { background: linear-gradient(135deg, #7c3aed 0%, #3b82f6 100%); }
+    .text-grad { background: linear-gradient(135deg, #c084fc 0%, #60a5fa 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    @media print {
+      body { background: #ffffff !important; color: #0f172a !important; }
+      .no-print { display: none !important; }
+      .print-sheet { background: #ffffff !important; color: #0f172a !important; border: none !important; box-shadow: none !important; padding: 0 !important; }
+      .print-sheet input, .print-sheet textarea, .print-sheet select {
+        color: #0f172a !important; background: transparent !important; border: 1px solid #cbd5e1 !important;
+      }
+      .print-sheet h1, .print-sheet h2, .print-sheet h3, .print-sheet p, .print-sheet span, .print-sheet div {
+        color: #0f172a !important;
+      }
+    }
+  </style>
+</head>
+<body class="min-h-screen antialiased selection:bg-purple-500/30">
+
+  <!-- Top Ecosystem Switcher Bar -->
+  <div class="no-print sticky top-0 z-50 border-b border-white/10 bg-[#06070f]/90 backdrop-blur-xl">
+    <div class="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-3">
+      <div class="flex items-center gap-2.5">
+        <span class="flex h-8 w-8 items-center justify-center rounded-lg grad text-sm font-bold text-white">N</span>
+        <div>
+          <span class="font-bold text-white text-sm">NexusOS</span>
+          <span class="ml-2 rounded bg-purple-500/20 px-2 py-0.5 text-[10px] font-mono text-purple-300">Browser Preview</span>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2 rounded-xl bg-white/5 p-1 border border-white/10">
+        <button id="btn-mode-site" onclick="setMode('website')" class="rounded-lg px-3.5 py-1.5 text-xs font-semibold transition cursor-pointer">
+          Project 2: Public Website
+        </button>
+        <button id="btn-mode-dash" onclick="setMode('dashboard')" class="rounded-lg px-3.5 py-1.5 text-xs font-semibold transition cursor-pointer">
+          Unified Business Dashboard (Projects 1, 3, 4)
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Mount Point -->
+  <div id="app"></div>
+
+  <script>
+    // =========================================================
+    // STATE & REALISTIC SAMPLE DATA (Zero Fabricated Metrics)
+    // =========================================================
+    const SERVICES = [
+      { slug: "landing-pages", cat: "WEBSITE_DEVELOPMENT", name: "High-Converting Landing Pages", timeline: "5–7 days", price: 850, desc: "Targeted single-page conversion architectures for paid traffic & international lead capture.", tiers: [{t:"Starter",p:850},{t:"Growth",p:1450},{t:"Enterprise",p:2400}], deliverables: ["Responsive Next.js UI", "Lead/CRM Webhook", "GA4 & Pixel Setup"] },
+      { slug: "business-websites", cat: "WEBSITE_DEVELOPMENT", name: "Corporate & Business Websites", timeline: "2–3 weeks", price: 1800, desc: "Multi-page authority websites built for credibility, technical SEO, and lead generation.", tiers: [{t:"Starter",p:1800},{t:"Growth",p:3200},{t:"Enterprise",p:5500}], deliverables: ["Up to 10 Pages + Blog", "Technical SEO & Schema", "Admin Training"] },
+      { slug: "ecommerce", cat: "WEBSITE_DEVELOPMENT", name: "E-Commerce Websites", timeline: "3–5 weeks", price: 2800, desc: "Fast online storefronts with frictionless checkout, inventory control, and payment gateways.", tiers: [{t:"Starter",p:2800},{t:"Growth",p:4800},{t:"Enterprise",p:8500}], deliverables: ["Product Catalog & Cart", "Stripe/Paystack Checkout", "Merchant Dashboard"] },
+      { slug: "custom-apps", cat: "CUSTOM_SOFTWARE", name: "Custom Web Applications", timeline: "4–8 weeks", price: 4500, desc: "Tailored client portals, internal ops tools, and SaaS MVPs built with PostgreSQL & TypeScript.", tiers: [{t:"Starter",p:4500},{t:"Growth",p:8500},{t:"Enterprise",p:15000}], deliverables: ["Auth & Role Security", "PostgreSQL Architecture", "Production CI/CD"] },
+      { slug: "process-auto", cat: "AI_AUTOMATION", name: "Business Process Automation", timeline: "1–2 weeks", price: 1200, desc: "Eliminate manual data copying across CRM, invoicing, notifications, and document workflows.", tiers: [{t:"Starter",p:1200},{t:"Growth",p:2600},{t:"Enterprise",p:5200}], deliverables: ["Automated Workflows", "Error Alerting", "Process Documentation"] },
+      { slug: "ai-support", cat: "AI_AUTOMATION", name: "AI Customer Support Agents", timeline: "1–2 weeks", price: 1500, desc: "Knowledge-grounded AI assistants for web & WhatsApp with strict human escalation rules.", tiers: [{t:"Starter",p:1500},{t:"Growth",p:3000},{t:"Enterprise",p:5800}], deliverables: ["Trained Support Widget", "Guardrail Config", "Escalation Routing"] },
+      { slug: "lead-auto", cat: "AI_AUTOMATION", name: "Lead Management Automation", timeline: "7–10 days", price: 1100, desc: "Instant lead scoring, AI draft responses, WhatsApp alerts, and calendar booking workflows.", tiers: [{t:"Starter",p:1100},{t:"Growth",p:2200},{t:"Enterprise",p:4000}], deliverables: ["CRM Pipeline Triggers", "Follow-Up Sequences", "Calendar Routing"] },
+      { slug: "workflow-auto", cat: "AI_AUTOMATION", name: "Workflow & API Integrations", timeline: "1–2 weeks", price: 1000, desc: "Reliable API bridges connecting payment processors, project trackers, and AI pipelines.", tiers: [{t:"Starter",p:1000},{t:"Growth",p:2400},{t:"Enterprise",p:4800}], deliverables: ["Webhook Middleware", "Validation & Retries", "API Mapping Docs"] },
+      { slug: "meta-ads", cat: "DIGITAL_MARKETING", name: "Meta Ads Setup & CAPI", timeline: "5–7 days", price: 750, desc: "Business Manager structure, Pixel + server-side Conversions API, and launch campaigns.", tiers: [{t:"Starter",p:750},{t:"Growth",p:1350},{t:"Enterprise",p:2200}], deliverables: ["Verified CAPI Tracking", "Audience Architecture", "Launch Ad Sets"] },
+      { slug: "ad-management", cat: "DIGITAL_MARKETING", name: "Ad Campaign Management", timeline: "Monthly", price: 900, desc: "Weekly creative testing, bid optimization, and transparent ROI reporting.", tiers: [{t:"Starter",p:900},{t:"Growth",p:1600},{t:"Enterprise",p:2800}], deliverables: ["Weekly Optimization", "Creative Testing", "Monthly KPI Report"] },
+      { slug: "mkt-strategy", cat: "DIGITAL_MARKETING", name: "Marketing Strategy Playbook", timeline: "7–10 days", price: 950, desc: "90-day GTM acquisition plan covering ICP, offer positioning, channel mix, and KPIs.", tiers: [{t:"Starter",p:950},{t:"Growth",p:1800},{t:"Enterprise",p:3200}], deliverables: ["GTM Strategy PDF", "90-Day Roadmap", "Workshop Session"] },
+      { slug: "perf-reporting", cat: "DIGITAL_MARKETING", name: "Performance Reporting", timeline: "5–7 days", price: 700, desc: "Unified executive dashboards connecting ad spend, web conversions, and CRM pipeline.", tiers: [{t:"Starter",p:700},{t:"Growth",p:1400},{t:"Enterprise",p:2600}], deliverables: ["UTM Taxonomy", "Live KPI Dashboard", "Attribution Setup"] }
+    ];
+
+    const DELIVERY_DOC_DEFS = [
+      ["01. Client Welcome Letter", "ONBOARDING", false, "Send immediately upon proposal acceptance and deposit confirmation.", "Dear Client,\n\nThank you for partnering with us. All milestones, approvals, and files are tracked in your portal. Weekly progress reports are issued every Friday."],
+      ["02. Client Onboarding Questionnaire", "ONBOARDING", false, "Client completes prior to kickoff call.", "1. Primary 90-day measurable goal:\n2. Top 2 target buyer segments:\n3. Main prospect objections:\n4. Reference websites admired:\n5. Final sign-off stakeholder:"],
+      ["03. Project Requirements Document (PRD)", "ONBOARDING", true, "Confirm functional & non-functional requirements before Sprint 1.", "1. Core user journeys & integrations confirmed.\n2. Mobile-first responsive & accessibility standards.\n3. Out-of-scope items governed by Change Request."],
+      ["04. Business Information Collection Form", "ONBOARDING", false, "Collect legal, billing, domain, and brand asset details.", "Company Legal Name:\nBilling Address / Tax ID:\nSupport Email & WhatsApp:\nPrimary Domain:\nBrand Assets Drive Link:"],
+      ["05. Access & Credentials Checklist", "ONBOARDING", false, "SECURITY RULE: Invite developer email as collaborator or use encrypted 1-time secret links—never plaintext email passwords.", "[ ] Domain DNS (Cloudflare/Registrar)\n[ ] Hosting (Vercel/AWS)\n[ ] Database (Neon/Supabase)\n[ ] Meta Business Manager / GA4\n[ ] API Keys (Restricted/Test first)"],
+      ["06. Project Kickoff Checklist", "ONBOARDING", true, "Verify all prerequisites before Sprint 1 begins.", "[x] Proposal signed & kickoff deposit settled\n[ ] Questionnaire & brand assets received\n[ ] Platform accesses verified\n[ ] Staging environment initialized"],
+      ["07. Project Scope Baseline Document", "PROJECT_MANAGEMENT", true, "Baseline governing deliverables & 2-round revision boundary.", "In-Scope: Discovery, Core Engineering/Automation, QA Testing, Production Handover.\nRevisions: Up to 2 consolidated rounds per milestone."],
+      ["08. Project Milestone Tracker", "PROJECT_MANAGEMENT", false, "Synced with live Milestone cards above.", "M1: Onboarding & Architecture\nM2: Core Build & Integrations\nM3: Staging QA & Client Review\nM4: Production Launch & Handover"],
+      ["09. Weekly Development Progress Report", "PROJECT_MANAGEMENT", false, "Update and send every Friday.", "Overall Health: ON TRACK\n\nCompleted This Week:\n- ...\n\nPlanned Next Week:\n- ...\n\nAction Items Needed From Client:\n- ..."],
+      ["10. Client Feedback & Milestone Approval Form", "PROJECT_MANAGEMENT", true, "Client signs to approve staging deliverables.", "Milestone Reviewed: Staging v1\nOutcome: [ ] Approved As-Is  [ ] Approved With Minor Revisions\nNotes:"],
+      ["11. Consolidated Revision Request Form", "PROJECT_MANAGEMENT", false, "Batch requested edits into a single round.", "Round #: 1\n1. [Module / Page] — Current vs Requested Adjustment\n2. [Module / Page] — Current vs Requested Adjustment"],
+      ["12. Formal Change-Request Documentation", "PROJECT_MANAGEMENT", true, "Required for additions outside signed Project Scope.", "CR #: CR-001\nRequested Addition:\nImpact Assessment: +[X] business days | +$[Amount] USD"],
+      ["13. Project Completion Report", "FINAL_DELIVERY", true, "Issued upon live production deployment.", "All agreed deliverables have been engineered, QA tested across desktop/mobile, and deployed over HTTPS."],
+      ["14. Final Deliverables Checklist", "FINAL_DELIVERY", true, "Confirm transfer of every project artifact.", "[ ] Production URL live\n[ ] Git repository transferred\n[ ] Env var docs delivered\n[ ] Admin credentials rotated\n[ ] Training guide provided"],
+      ["15. Website / Software Handover Document", "FINAL_DELIVERY", true, "Formal transfer of operational control and IP upon final payment.", "Full ownership of custom deliverables and configuration transfers to Client upon final milestone settlement."],
+      ["16. Admin Access Handover Instructions", "FINAL_DELIVERY", false, "Complete within 48 hours of handover.", "1. Log into Admin Dashboard.\n2. Rotate passwords & enable 2FA on Hosting, DNS, and Database.\n3. Verify billing ownership on third-party APIs."],
+      ["17. Technical Documentation", "FINAL_DELIVERY", false, "Developer architecture reference.", "Stack: Next.js App Router, TypeScript, Tailwind CSS, PostgreSQL, Prisma.\nCommands: npm install && npx prisma migrate deploy && npm run build"],
+      ["18. User Training Guide", "FINAL_DELIVERY", false, "Non-technical operations guide for client team.", "1. Logging in via /login\n2. Managing leads, content & proposals\n3. Clicking Export PDF on any document\nWalkthrough Video URL: [Add Link]"],
+      ["19. Deployment & Hosting Information", "FINAL_DELIVERY", false, "Record of infrastructure providers & renewal dates.", "App Host: Vercel\nDatabase: Managed PostgreSQL (Daily Backups Enabled)\nDNS/SSL: Cloudflare TLS 1.3"],
+      ["20. Client Satisfaction Survey", "POST_DELIVERY", false, "Use the interactive Survey panel below to submit & sync verified reviews.", "1. Overall satisfaction (1–5)\n2. Communication & responsiveness (1–5)\n3. What exceeded expectations?"],
+      ["21. Maintenance & Support Agreement", "POST_DELIVERY", true, "Optional monthly care retainer.", "Tiers: Essential Care ($150/mo) | Growth Retainer ($400/mo) | Partner SLA ($950/mo).\n30-day cancellation notice."],
+      ["22. Post-Delivery Follow-Up Email", "POST_DELIVERY", false, "Send 14 days post-launch.", "Subject: Checking in 2 weeks post-launch\n\nHi [Name], checking in on how the team is finding the new system..."],
+      ["23. Verified Testimonial Request", "POST_DELIVERY", false, "Send only after confirmed successful delivery.", "Hi [Name], if you're happy with the final result, would you spare 2 minutes to share an honest review?"],
+      ["24. Referral Request Template", "POST_DELIVERY", false, "Send 30 days post-launch.", "Hi [Name], if another founder in your network needs web engineering or AI automation, we offer a 10% referral credit."]
+    ];
+
+    const state = {
+      mode: "website", // 'website' | 'dashboard'
+      dashTab: "overview", // 'overview' | 'content' | 'leads' | 'services' | 'proposals' | 'delivery'
+      contentSubTab: "generator", // 'generator' | 'repurpose' | 'calendar' | 'voice' | 'analytics'
+      deliveryPhase: "ONBOARDING",
+      selectedDocIdx: 0,
+      openAiKey: "",
+      contactSuccess: false,
+      aiNotice: "",
+      brandVoice: {
+        niche: "Full-Stack Web Engineering & AI Automation",
+        audience: "B2B Founders & Growth-Stage Service Agencies",
+        tone: "Authoritative, clear, practical, zero-fluff",
+        cta: "Book a 20-minute technical discovery call"
+      },
+      contentItems: [
+        {
+          id: "c1",
+          title: "Why Manual Lead Handoffs Cost Agencies Deals",
+          platform: "LINKEDIN",
+          headline: "Speed-to-lead isn't a marketing problem—it's a systems problem.",
+          body: "When an international prospect submits your website form, waiting 12 hours to draft a reply kills momentum.\n\nConnecting your contact form directly to an automated CRM + proposal generator cuts response time to minutes.\n\nBook a 20-minute technical discovery call to audit your current pipeline.",
+          hashtags: ["#SaaS", "#AIAutomation", "#B2BSystems"],
+          status: "SCHEDULED",
+          date: new Date().toISOString().split("T")[0]
+        },
+        {
+          id: "c2",
+          title: "60s Short-Form Video Script: CAPI Tracking",
+          platform: "VIDEO_SCRIPT",
+          headline: "[0:00-0:04] Your Meta Ads aren't broken—your tracking is.",
+          body: "[0:00-0:05] Hook: Browser pixels miss conversions every day.\n[0:05-0:25] Problem: Without server-side Conversions API (CAPI), Meta's algorithm optimizes on incomplete data.\n[0:25-0:45] Fix: Route verified purchase & lead events directly from your Next.js backend.\n[0:45-0:60] CTA: Comment 'CAPI' or book an audit via the link in bio.",
+          hashtags: ["#MetaAds", "#PerformanceMarketing", "#NextJS"],
+          status: "APPROVED",
+          date: new Date(Date.now() + 86400000 * 2).toISOString().split("T")[0]
+        }
+      ],
+      leads: [
+        { id: "L-101", name: "Daniel Okafor", email: "daniel@vanguardops.io", company: "Vanguard Ops", service: "Business Process Automation", budget: "$1,500 – $3,500", message: "Looking to automate client onboarding and proposal generation.", status: "QUALIFIED" }
+      ],
+      proposal: {
+        number: "PROP-2026-101",
+        clientName: "Daniel Okafor",
+        clientCompany: "Vanguard Ops",
+        clientEmail: "daniel@vanguardops.io",
+        projectTitle: "Unified Web Portal & AI Lead Automation",
+        coverSubtitle: "Technical Architecture, Implementation & Commercial Proposal",
+        status: "SENT",
+        executiveSummary: "This proposal outlines a 4-week milestone engagement to deploy a conversion-ready Next.js web platform integrated with automated lead capture, CRM workflows, and standardized client delivery.",
+        clientOverview: "Vanguard Ops serves B2B clients and requires faster prospect quoting and structured project handover.",
+        challenges: "1. Manual quoting delays lead response.\n2. Fragmented spreadsheets across onboarding and milestones.\n3. No unified analytics attribution.",
+        solution: "Build a custom Next.js + PostgreSQL ecosystem connecting public lead capture, AI content workflows, and a 24-document Client Delivery Portal.",
+        scope: "- Discovery & DB schema design\n- Responsive UI & API endpoints\n- AI automation & CRM pipelines\n- QA testing, deployment & handover docs",
+        deliverables: "- Production web app\n- Admin Business Dashboard\n- Complete Client Delivery Pack & Training Guide",
+        timeline: "Week 1: Discovery & Architecture\nWeek 2–3: Core Engineering\nWeek 4: Staging QA & Production Launch",
+        investmentUsd: 3200,
+        maintenance: "Optional Care Plans: Essential ($150/mo) | Growth ($400/mo) | Partner SLA ($950/mo)",
+        terms: "40% kickoff / 30% staging / 30% launch. Up to 2 consolidated revision rounds per milestone. Out-of-scope additions governed by Change Request.",
+        signedName: "",
+        signedAt: ""
+      },
+      project: {
+        code: "PRJ-2026-001",
+        title: "Unified Web Portal & AI Lead Automation",
+        client: "Daniel Okafor (Vanguard Ops)",
+        stage: "ONBOARDING",
+        milestones: [
+          { title: "M1: Discovery & Architecture", pct: 40, status: "IN_PROGRESS" },
+          { title: "M2: Core Build & AI APIs", pct: 30, status: "PENDING" },
+          { title: "M3: Staging QA & Review", pct: 0, status: "PENDING" },
+          { title: "M4: Production Handover", pct: 30, status: "PENDING" }
+        ],
+        docs: DELIVERY_DOC_DEFS.map((d, i) => ({
+          id: i,
+          title: d[0],
+          phase: d[1],
+          requiresSig: d[2],
+          instructions: d[3],
+          content: d[4],
+          status: i === 0 ? "SENT_TO_CLIENT" : "DRAFT",
+          signedBy: ""
+        }))
+      },
+      testimonials: [] // Empty by default so placeholders show honestly until user submits & approves survey!
+    };
+
+    function esc(str) {
+      return String(str ?? "").replace(/[&<>"']/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[m]));
+    }
+
+    function setMode(mode) { state.mode = mode; render(); window.scrollTo(0, 0); }
+    function setDashTab(tab) { state.dashTab = tab; render(); }
+
+    // =========================================================
+    // ACTION HANDLERS
+    // =========================================================
+    function handleContactSubmit(e) {
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      state.leads.unshift({
+        id: "L-" + (101 + state.leads.length),
+        name: fd.get("fullName"),
+        email: fd.get("email"),
+        company: fd.get("company") || "Independent",
+        service: fd.get("serviceInterest"),
+        budget: fd.get("budgetRange"),
+        message: fd.get("message"),
+        status: "NEW"
+      });
+      state.contactSuccess = true;
+      render();
+    }
+
+    function prefillQuote(serviceName) {
+      const sel = document.getElementById("contact-service");
+      if (sel) sel.value = serviceName;
+      document.getElementById("contact")?.scrollIntoView({ behavior: "smooth" });
+    }
+
+    function createProposalFromLead(leadId) {
+      const lead = state.leads.find(l => l.id === leadId);
+      if (!lead) return;
+      state.proposal.clientName = lead.name;
+      state.proposal.clientCompany = lead.company;
+      state.proposal.clientEmail = lead.email;
+      state.proposal.projectTitle = lead.service + " Engagement";
+      state.proposal.status = "DRAFT";
+      state.proposal.signedName = "";
+      state.proposal.signedAt = "";
+      lead.status = "PROPOSAL_SENT";
+      state.dashTab = "proposals";
+      render();
+    }
+
+    async function generateAiDraft(e) {
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      const platform = fd.get("platform");
+      const niche = fd.get("niche");
+      const audience = fd.get("audience");
+      const objective = fd.get("objective");
+      const topic = fd.get("topic");
+
+      if (state.openAiKey.trim().startsWith("sk-")) {
+        state.aiNotice = "Calling OpenAI API...";
+        render();
+        try {
+          const resp = await fetch("https://api.openai.com/v1/chat/completions", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "Authorization": "Bearer " + state.openAiKey.trim() },
+            body: JSON.stringify({
+              model: "gpt-4o-mini",
+              response_format: { type: "json_object" },
+              messages: [
+                { role: "system", content: 'Return JSON: {"title":"string","headline":"string","body":"string","hashtags":["#tag"]}' },
+                { role: "user", content: `Write a ${platform} post for niche "${niche}", audience "${audience}", objective "${objective}", topic "${topic}", tone "${state.brandVoice.tone}". CTA: "${state.brandVoice.cta}".` }
+              ]
+            })
+          });
+          const data = await resp.json();
+          const parsed = JSON.parse(data.choices[0].message.content);
+          state.contentItems.unshift({
+            id: "c" + Date.now(),
+            title: parsed.title,
+            platform,
+            headline: parsed.headline,
+            body: parsed.body,
+            hashtags: parsed.hashtags || [],
+            status: "DRAFT",
+            date: new Date().toISOString().split("T")[0]
+          });
+          state.aiNotice = "Live LLM draft generated and added to Content Library!";
+        } catch (err) {
+          state.aiNotice = "Live API call failed (" + err.message + "). Check your key or browser CORS.";
+        }
+        render();
+        return;
+      }
+
+      // Honest Template Preview Mode when no API key is provided
+      state.contentItems.unshift({
+        id: "c" + Date.now(),
+        title: `[Template Draft] ${topic.slice(0, 42)}`,
+        platform,
+        headline: `Why ${audience} are rethinking ${topic.slice(0, 35)}`,
+        body: `[PREVIEW TEMPLATE — Connect OPENAI_API_KEY above or in Next.js .env for live AI copywriting]\n\nCore Angle for ${platform}:\n• Audience: ${audience}\n• Niche: ${niche}\n• Objective: ${objective}\n• Topic Brief: ${topic}\n\nCTA: ${state.brandVoice.cta}`,
+        hashtags: ["#DigitalSystems", "#WorkflowAutomation", "#Growth"],
+        status: "DRAFT",
+        date: new Date().toISOString().split("T")[0]
+      });
+      state.aiNotice = "Created structured Template Preview draft (enter an OpenAI API key in Brand Voice for live AI copywriting).";
+      render();
+    }
+
+    function repurposeSelected() {
+      const src = state.contentItems[0];
+      if (!src) return;
+      ["X", "INSTAGRAM", "EMAIL"].forEach((plat, idx) => {
+        state.contentItems.unshift({
+          id: "rep-" + Date.now() + idx,
+          title: `[Repurposed → ${plat}] ${src.title}`,
+          platform: plat,
+          headline: src.headline,
+          body: `[Repurposed ${plat} format from "${src.title}"]\n\n` + src.body,
+          hashtags: src.hashtags,
+          status: "DRAFT",
+          date: new Date(Date.now() + 86400000 * (idx + 1)).toISOString().split("T")[0]
+        });
+      });
+      state.aiNotice = "Repurposed top post into X, Instagram, and Email variations.";
+      render();
+    }
+
+    function signAndConvertProposal() {
+      const nameInput = document.getElementById("prop-sign-input")?.value?.trim() || state.proposal.clientName;
+      state.proposal.signedName = nameInput;
+      state.proposal.signedAt = new Date().toLocaleDateString();
+      state.proposal.status = "ACCEPTED";
+      state.project.title = state.proposal.projectTitle;
+      state.project.client = `${state.proposal.clientName} (${state.proposal.clientCompany})`;
+      state.project.stage = "ONBOARDING";
+      state.dashTab = "delivery";
+      render();
+    }
+
+    function submitSurvey(e) {
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      state.testimonials.unshift({
+        id: "t-" + Date.now(),
+        clientName: fd.get("clientName"),
+        clientRole: fd.get("clientRole"),
+        company: state.proposal.clientCompany,
+        rating: Number(fd.get("rating")),
+        quote: fd.get("quote"),
+        approvedForWebsite: true
+      });
+      alert("Survey submitted and published! Switch to 'Project 2: Public Website' -> Client Reviews to see it live replacing the placeholder.");
+      render();
+    }
+
+    // =========================================================
+    // RENDER: PROJECT 2 PUBLIC FREELANCER WEBSITE
+    // =========================================================
+    function renderWebsite() {
+      const approvedReviews = state.testimonials.filter(t => t.approvedForWebsite);
+      return `
+      <div class="relative overflow-x-hidden">
+        <div class="pointer-events-none fixed inset-0 -z-10">
+          <div class="absolute -top-40 left-1/4 h-[500px] w-[500px] rounded-full bg-purple-700/20 blur-[140px]"></div>
+          <div class="absolute top-1/3 right-1/5 h-[440px] w-[440px] rounded-full bg-blue-600/15 blur-[140px]"></div>
+        </div>
+
+        <!-- Website Nav -->
+        <header class="border-b border-white/10 bg-[#06070f]/75">
+          <div class="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
+            <span class="font-bold text-white text-lg">ApexTech <span class="text-grad">Studio</span></span>
+            <div class="hidden md:flex gap-7 text-sm text-slate-300">
+              <a href="#about" class="hover:text-white">About</a>
+              <a href="#services" class="hover:text-white">Services</a>
+              <a href="#portfolio" class="hover:text-white">Portfolio</a>
+              <a href="#pricing" class="hover:text-white">Pricing</a>
+              <a href="#contact" class="hover:text-white">Contact</a>
+            </div>
+            <a href="#contact" class="rounded-xl grad px-4 py-2 text-xs font-semibold text-white">Hire Me</a>
+          </div>
+        </header>
+
+        <!-- Hero -->
+        <section class="mx-auto max-w-5xl px-6 pt-20 pb-16 text-center">
+          <div class="inline-block rounded-full border border-purple-500/30 bg-purple-500/10 px-4 py-1.5 text-xs text-purple-300 mb-6">
+            Full-Stack Software Engineering • AI Automation • Growth Systems
+          </div>
+          <h1 class="text-4xl sm:text-6xl font-extrabold tracking-tight text-white leading-[1.1]">
+            Engineering High-Converting <span class="text-grad">Web Platforms & AI Systems</span> That Scale Revenue
+          </h1>
+          <p class="mx-auto mt-6 max-w-2xl text-slate-300 text-base sm:text-lg">
+            Helping international founders replace manual bottlenecks with production Next.js applications, intelligent workflow automation, and accountable ad funnels.
+          </p>
+          <div class="mt-9 flex flex-wrap justify-center gap-4">
+            <a href="#contact" class="rounded-xl grad px-7 py-3.5 text-sm font-semibold text-white shadow-xl shadow-purple-600/30">Hire Me — Book Consultation</a>
+            <a href="#portfolio" class="rounded-xl border border-white/15 bg-white/5 px-7 py-3.5 text-sm font-semibold text-white hover:bg-white/10">View Portfolio</a>
+          </div>
+        </section>
+
+        <!-- About -->
+        <section id="about" class="mx-auto max-w-7xl px-6 py-16 border-t border-white/5 grid lg:grid-cols-12 gap-10">
+          <div class="lg:col-span-6 space-y-4">
+            <p class="text-xs font-semibold uppercase tracking-widest text-purple-400">About</p>
+            <h2 class="text-3xl font-bold text-white">Senior Engineering Meets Commercial Strategy</h2>
+            <p class="text-sm text-slate-300 leading-relaxed">
+              Instead of treating websites, automations, and paid ads as disconnected pieces, I architect unified systems built around lead conversion, operational speed, and clean handover documentation.
+            </p>
+            <ul class="space-y-2 text-sm text-slate-300 pt-2">
+              <li>✓ 1. Discovery & Bottleneck Audit</li>
+              <li>✓ 2. Clean Next.js + PostgreSQL Architecture</li>
+              <li>✓ 3. AI Workflow & Conversion Tracking Integration</li>
+              <li>✓ 4. Full Source Code & 24-Document Client Handover</li>
+            </ul>
+          </div>
+          <div class="lg:col-span-6 grid sm:grid-cols-2 gap-4">
+            ${[
+              ["Frontend & UI", "Next.js, React, TypeScript, Tailwind CSS"],
+              ["Backend & DB", "Node.js, PostgreSQL, Prisma ORM, REST APIs"],
+              ["AI Automation", "OpenAI / LLM APIs, Support Bots, CRM Pipelines"],
+              ["Digital Growth", "Meta Ads & CAPI, Technical SEO, GA4 Attribution"]
+            ].map(g => `<div class="glass rounded-2xl p-5"><h3 class="text-sm font-semibold text-purple-300">${g[0]}</h3><p class="mt-2 text-xs text-slate-300">${g[1]}</p></div>`).join("")}
+          </div>
+        </section>
+
+        <!-- Services -->
+        <section id="services" class="mx-auto max-w-7xl px-6 py-16 border-t border-white/5">
+          <p class="text-xs font-semibold uppercase tracking-widest text-blue-400">Services</p>
+          <h2 class="mt-2 text-3xl font-bold text-white mb-8">Core Capabilities</h2>
+          <div class="grid gap-5 md:grid-cols-3">
+            ${SERVICES.slice(0, 6).map(s => `
+              <div class="glass rounded-2xl p-6 flex flex-col justify-between">
+                <div>
+                  <div class="flex justify-between text-xs mb-3">
+                    <span class="text-purple-300 font-mono">${s.cat.replace("_", " ")}</span>
+                    <span class="text-slate-400">${s.timeline}</span>
+                  </div>
+                  <h3 class="font-bold text-white">${s.name}</h3>
+                  <p class="mt-2 text-xs text-slate-400 leading-relaxed">${s.desc}</p>
+                </div>
+                <div class="mt-5 pt-3 border-t border-white/10 flex justify-between text-sm">
+                  <span class="text-slate-400">Starting at</span>
+                  <span class="font-bold text-white">$${s.price.toLocaleString()}</span>
+                </div>
+              </div>
+            `).join("")}
+          </div>
+        </section>
+
+        <!-- Portfolio -->
+        <section id="portfolio" class="mx-auto max-w-7xl px-6 py-16 border-t border-white/5">
+          <p class="text-xs font-semibold uppercase tracking-widest text-purple-400">Portfolio</p>
+          <h2 class="mt-2 text-3xl font-bold text-white mb-8">Reference Architectures & Systems</h2>
+          <div class="grid gap-6 lg:grid-cols-3">
+            ${[
+              ["B2B Lead-to-Onboarding Automation", "AI Automation & Full-Stack", "Eliminates manual spreadsheet handoffs between forms, quoting, and onboarding.", "Unified pipeline from contact form to e-signed proposal and 24-doc portal.", ["Next.js", "PostgreSQL", "LLM API"]],
+              ["Knowledge-Grounded AI Support Hub", "AI Automation", "Support teams overwhelmed by repetitive order and onboarding FAQs.", "24/7 accurate first-line triage with structured escalation to humans.", ["React", "Node.js", "OpenAI API"]],
+              ["Headless Storefront & Meta CAPI Funnel", "Web Dev & Marketing", "Slow mobile themes causing checkout bounce and broken ad attribution.", "Sub-second page transitions with verified server-side conversion events.", ["Next.js", "Stripe", "Meta CAPI"]]
+            ].map(p => `
+              <div class="glass rounded-2xl overflow-hidden flex flex-col">
+                <div class="h-32 bg-gradient-to-br from-purple-900/40 via-slate-900 to-blue-900/40 p-4 flex flex-col justify-between border-b border-white/10">
+                  <span class="self-end rounded bg-white/10 px-2 py-0.5 text-[10px] font-mono text-slate-300">Reference Case Study</span>
+                  <span class="text-xs font-mono text-blue-300">${p[1]}</span>
+                </div>
+                <div class="p-5 space-y-2 flex-1">
+                  <h3 class="font-bold text-white">${p[0]}</h3>
+                  <p class="text-xs text-slate-400"><strong class="text-slate-200">Problem:</strong> ${p[2]}</p>
+                  <p class="text-xs text-slate-400"><strong class="text-emerald-300">Outcome:</strong> ${p[3]}</p>
+                  <div class="pt-3 flex flex-wrap gap-1.5">${p[4].map(t => `<span class="rounded bg-white/5 border border-white/10 px-2 py-0.5 text-[10px] font-mono">${t}</span>`).join("")}</div>
+                </div>
+              </div>
+            `).join("")}
+          </div>
+        </section>
+
+        <!-- Testimonials (Placeholders unless submitted & approved via Project 4!) -->
+        <section id="testimonials" class="mx-auto max-w-7xl px-6 py-16 border-t border-white/5">
+          <p class="text-xs font-semibold uppercase tracking-widest text-blue-400">Client Feedback</p>
+          <h2 class="mt-2 text-3xl font-bold text-white mb-8">Verified Client Reviews</h2>
+          ${approvedReviews.length > 0 ? `
+            <div class="grid gap-6 md:grid-cols-3">
+              ${approvedReviews.map(r => `
+                <div class="glass rounded-2xl p-6 space-y-3">
+                  <div class="text-amber-400 text-sm">${"★".repeat(r.rating)}</div>
+                  <p class="text-sm text-slate-200">"${esc(r.quote)}"</p>
+                  <div class="pt-2 border-t border-white/10 text-xs">
+                    <div class="font-semibold text-white">${esc(r.clientName)}</div>
+                    <div class="text-slate-400">${esc(r.clientRole)} • ${esc(r.company)}</div>
+                  </div>
+                </div>
+              `).join("")}
+            </div>
+          ` : `
+            <div class="grid gap-6 md:grid-cols-3">
+              ${[1,2,3].map(i => `
+                <div class="rounded-2xl border border-dashed border-white/15 bg-white/[0.02] p-6 space-y-2">
+                  <p class="text-xs font-mono text-amber-400">[Placeholder — Awaiting Verified Client Testimonial #${i}]</p>
+                  <p class="text-xs text-slate-400">Submit the Client Satisfaction Survey in Project 4 (Dashboard -> Client Delivery Pack) to see a real review populate here live.</p>
+                </div>
+              `).join("")}
+            </div>
+          `}
+        </section>
+
+        <!-- Pricing -->
+        <section id="pricing" class="mx-auto max-w-7xl px-6 py-16 border-t border-white/5">
+          <div class="flex flex-wrap justify-between items-end gap-4 mb-8">
+            <div>
+              <p class="text-xs font-semibold uppercase tracking-widest text-purple-400">Pricing</p>
+              <h2 class="mt-2 text-3xl font-bold text-white">Starting Service Packages</h2>
+            </div>
+            <button onclick="prefillQuote('Custom Multi-Service Engagement')" class="rounded-xl border border-purple-500/40 bg-purple-500/10 px-4 py-2 text-xs font-semibold text-purple-200 cursor-pointer">Request Custom Quote</button>
+          </div>
+          <div class="grid gap-6 md:grid-cols-3">
+            ${SERVICES.slice(0, 3).map((pkg, idx) => `
+              <div class="glass rounded-2xl p-6 flex flex-col justify-between ${idx === 1 ? "ring-1 ring-purple-500/50" : ""}">
+                <div>
+                  <span class="text-xs font-mono text-blue-400">${pkg.timeline}</span>
+                  <h3 class="mt-1 text-lg font-bold text-white">${pkg.name}</h3>
+                  <p class="mt-3 text-3xl font-extrabold text-white">$${pkg.price.toLocaleString()} <span class="text-xs font-normal text-slate-400">starting</span></p>
+                  <ul class="mt-5 space-y-2 text-xs text-slate-300">
+                    ${pkg.deliverables.map(d => `<li>• ${d}</li>`).join("")}
+                  </ul>
+                </div>
+                <button onclick="prefillQuote('${esc(pkg.name)}')" class="mt-6 w-full rounded-xl grad py-2.5 text-xs font-semibold text-white cursor-pointer">Select & Request Proposal</button>
+              </div>
+            `).join("")}
+          </div>
+        </section>
+
+        <!-- Contact Form -> Feeds Unified Dashboard Leads -->
+        <section id="contact" class="mx-auto max-w-7xl px-6 py-16 border-t border-white/5 grid lg:grid-cols-12 gap-10">
+          <div class="lg:col-span-5 space-y-4">
+            <p class="text-xs font-semibold uppercase tracking-widest text-blue-400">Contact</p>
+            <h2 class="text-3xl font-bold text-white">Start Your Project</h2>
+            <p class="text-sm text-slate-300">Submit this form to test the real-time connection into the Unified Business Dashboard's Lead CRM.</p>
+            <div class="space-y-3 pt-2 text-xs">
+              <a href="https://wa.me/+234 806 067 7222" target="_blank" class="block rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-emerald-200">💬 Chat Directly on WhatsApp</a>
+              <a href="mailto:ezea80214@gmail.com" class="block rounded-xl border border-white/10 bg-white/5 p-4 text-slate-200">✉️ ezea80214@gmail.com</a>
+            </div>
+          </div>
+
+          <form onsubmit="handleContactSubmit(event)" class="lg:col-span-7 glass rounded-2xl p-7 space-y-4">
+            ${state.contactSuccess ? `<div class="rounded-xl border border-emerald-500/40 bg-emerald-500/10 p-3 text-xs text-emerald-200">✓ Inquiry logged into Unified Dashboard! Switch to "Unified Business Dashboard -> Inquiries & Leads" to view and convert it into a Proposal.</div>` : ""}
+            <div class="grid sm:grid-cols-2 gap-4">
+              <input name="fullName" required placeholder="Full Name *" class="rounded-xl border border-white/15 bg-black/40 px-4 py-2.5 text-sm text-white" />
+              <input name="email" type="email" required placeholder="Work Email *" class="rounded-xl border border-white/15 bg-black/40 px-4 py-2.5 text-sm text-white" />
+            </div>
+            <div class="grid sm:grid-cols-2 gap-4">
+              <input name="company" placeholder="Company Name" class="rounded-xl border border-white/15 bg-black/40 px-4 py-2.5 text-sm text-white" />
+              <select id="contact-service" name="serviceInterest" class="rounded-xl border border-white/15 bg-slate-950 px-4 py-2.5 text-sm text-white">
+                ${SERVICES.map(s => `<option value="${esc(s.name)}">${esc(s.name)}</option>`).join("")}
+                <option value="Custom Multi-Service Engagement">Custom Multi-Service Engagement</option>
+              </select>
+            </div>
+            <select name="budgetRange" class="w-full rounded-xl border border-white/15 bg-slate-950 px-4 py-2.5 text-sm text-white">
+              <option>$750 – $1,500</option>
+              <option selected>$1,500 – $3,500</option>
+              <option>$3,500 – $8,000</option>
+              <option>$8,000+</option>
+            </select>
+            <textarea name="message" required rows="3" placeholder="Describe your goals and timeline..." class="w-full rounded-xl border border-white/15 bg-black/40 px-4 py-2.5 text-sm text-white"></textarea>
+            <button type="submit" class="w-full rounded-xl grad py-3 text-sm font-semibold text-white cursor-pointer">Submit Project Inquiry</button>
+          </form>
+        </section>
+      </div>`;
+    }
+
+    // =========================================================
+    // RENDER: UNIFIED BUSINESS DASHBOARD (PROJECTS 1, 3, 4)
+    // =========================================================
+    function renderDashboard() {
+      const tabs = [
+        ["overview", "Unified Overview"],
+        ["content", "1. AI Content Engine"],
+        ["leads", `Inquiries & Leads (${state.leads.length})`],
+        ["services", "3A. Service Menu (12)"],
+        ["proposals", "3B. Proposal Builder"],
+        ["delivery", "4. Client Delivery Pack (24)"]
+      ];
+
+      return `
+      <div class="mx-auto max-w-7xl px-4 py-6 flex flex-col lg:flex-row gap-6">
+        <aside class="no-print lg:w-64 shrink-0 glass rounded-2xl p-4 h-fit space-y-1.5">
+          <p class="px-3 pb-2 text-[11px] font-mono uppercase tracking-wider text-slate-400">Business OS Modules</p>
+          ${tabs.map(([k, label]) => `
+            <button onclick="setDashTab('${k}')" class="w-full text-left rounded-xl px-3.5 py-2.5 text-xs font-semibold transition cursor-pointer ${state.dashTab === k ? "grad text-white" : "text-slate-300 hover:bg-white/5"}">
+              ${label}
+            </button>
+          `).join("")}
+        </aside>
+
+        <main class="flex-1 min-w-0 space-y-6">
+          ${state.dashTab === "overview" ? renderDashOverview() : ""}
+          ${state.dashTab === "content" ? renderContentEngine() : ""}
+          ${state.dashTab === "leads" ? renderLeads() : ""}
+          ${state.dashTab === "services" ? renderServiceMenu() : ""}
+          ${state.dashTab === "proposals" ? renderProposalSystem() : ""}
+          ${state.dashTab === "delivery" ? renderDeliveryPack() : ""}
+        </main>
+      </div>`;
+    }
+
+    function renderDashOverview() {
+      return `
+      <div class="space-y-6">
+        <h1 class="text-2xl font-bold text-white">Unified Business Dashboard</h1>
+        <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div class="glass rounded-2xl p-5"><p class="text-xs text-slate-400">Content Pipeline</p><p class="text-2xl font-bold mt-1">${state.contentItems.length} items</p><p class="text-xs text-purple-300 mt-1">${state.contentItems.filter(i=>i.status==="SCHEDULED").length} scheduled</p></div>
+          <div class="glass rounded-2xl p-5"><p class="text-xs text-slate-400">Website Leads</p><p class="text-2xl font-bold mt-1">${state.leads.length} leads</p><p class="text-xs text-blue-300 mt-1">${state.leads.filter(l=>l.status==="NEW").length} new</p></div>
+          <div class="glass rounded-2xl p-5"><p class="text-xs text-slate-400">Active Proposal</p><p class="text-2xl font-bold mt-1">$${state.proposal.investmentUsd.toLocaleString()}</p><p class="text-xs text-emerald-300 mt-1">Status: ${state.proposal.status}</p></div>
+          <div class="glass rounded-2xl p-5"><p class="text-xs text-slate-400">Delivery Pack</p><p class="text-2xl font-bold mt-1">24 Docs</p><p class="text-xs text-amber-300 mt-1">Stage: ${state.project.stage}</p></div>
+        </div>
+        <div class="glass rounded-2xl p-6 space-y-3">
+          <h2 class="font-semibold text-white">Connected Ecosystem Workflow</h2>
+          <p class="text-xs text-slate-300 leading-relaxed">
+            1. <strong>Attract:</strong> Public Website captures inquiries directly into <em>Inquiries & Leads</em>.<br/>
+            2. <strong>Market:</strong> <em>AI Content Engine</em> builds 30-day multi-channel campaigns.<br/>
+            3. <strong>Convert:</strong> Convert any lead into a 13-section PDF <em>Proposal</em>, accept signature, and auto-launch the project.<br/>
+            4. <strong>Deliver:</strong> Manage milestones and all 24 standardized documents in <em>Client Delivery Pack</em>, then publish verified reviews back to the website.
+          </p>
+        </div>
+      </div>`;
+    }
+
+    function renderContentEngine() {
+      const sub = state.contentSubTab;
+      const days = Array.from({ length: 30 }).map((_, i) => new Date(Date.now() + i * 86400000).toISOString().split("T")[0]);
+      return `
+      <div class="space-y-6">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <h1 class="text-2xl font-bold text-white">Project 1: AI-Powered Content Engine</h1>
+          <div class="flex flex-wrap gap-1.5">
+            ${[["generator","AI Generator"],["repurpose","Repurpose"],["calendar","30-Day Calendar"],["voice","Brand Voice & API Key"],["analytics","Performance"]].map(([k,l])=>`
+              <button onclick="state.contentSubTab='${k}';render()" class="rounded-xl px-3 py-1.5 text-xs font-semibold cursor-pointer ${sub===k?"grad text-white":"bg-white/5 text-slate-300"}">${l}</button>
+            `).join("")}
+          </div>
+        </div>
+
+        ${state.aiNotice ? `<div class="rounded-xl border border-purple-500/40 bg-purple-500/10 p-3 text-xs text-purple-200">${esc(state.aiNotice)}</div>` : ""}
+
+        ${sub === "generator" ? `
+          <form onsubmit="generateAiDraft(event)" class="glass rounded-2xl p-5 space-y-4">
+            <div class="grid sm:grid-cols-3 gap-3">
+              <select name="platform" class="rounded-xl border border-white/15 bg-slate-950 px-3 py-2 text-xs text-white">
+                ${["INSTAGRAM","FACEBOOK","LINKEDIN","TIKTOK","X","BLOG","EMAIL","VIDEO_SCRIPT"].map(p=>`<option>${p}</option>`).join("")}
+              </select>
+              <input name="niche" value="${esc(state.brandVoice.niche)}" placeholder="Business Niche" class="rounded-xl border border-white/15 bg-black/40 px-3 py-2 text-xs text-white" />
+              <input name="audience" value="${esc(state.brandVoice.audience)}" placeholder="Target Audience" class="rounded-xl border border-white/15 bg-black/40 px-3 py-2 text-xs text-white" />
+            </div>
+            <div class="grid sm:grid-cols-2 gap-3">
+              <input name="objective" value="Generate discovery call bookings" placeholder="Marketing Objective" class="rounded-xl border border-white/15 bg-black/40 px-3 py-2 text-xs text-white" />
+              <input name="topic" required value="Automating client onboarding for service agencies" placeholder="Topic / Brief" class="rounded-xl border border-white/15 bg-black/40 px-3 py-2 text-xs text-white" />
+            </div>
+            <button type="submit" class="rounded-xl grad px-5 py-2.5 text-xs font-semibold text-white cursor-pointer">Generate Content</button>
+          </form>
+        ` : ""}
+
+        ${sub === "repurpose" ? `
+          <div class="glass rounded-2xl p-5 space-y-3">
+            <h2 class="font-semibold text-white text-sm">Repurpose Latest Content Across X, Instagram & Email</h2>
+            <p class="text-xs text-slate-400">Source: "${esc(state.contentItems[0]?.title || "None")}"</p>
+            <button onclick="repurposeSelected()" class="rounded-xl grad px-5 py-2 text-xs font-semibold text-white cursor-pointer">Repurpose Into 3 Channels</button>
+          </div>
+        ` : ""}
+
+        ${sub === "voice" ? `
+          <div class="glass rounded-2xl p-5 space-y-3">
+            <h2 class="font-semibold text-white text-sm">Brand Voice & Optional Live OpenAI Key</h2>
+            <input value="${esc(state.brandVoice.tone)}" onchange="state.brandVoice.tone=this.value" placeholder="Tone" class="w-full rounded-xl border border-white/15 bg-black/40 px-3 py-2 text-xs text-white" />
+            <input value="${esc(state.brandVoice.cta)}" onchange="state.brandVoice.cta=this.value" placeholder="Preferred CTA" class="w-full rounded-xl border border-white/15 bg-black/40 px-3 py-2 text-xs text-white" />
+            <div>
+              <label class="block text-[11px] text-slate-400 mb-1">Optional OpenAI API Key (stored only in your browser tab memory for live generation)</label>
+              <input type="password" value="${esc(state.openAiKey)}" onchange="state.openAiKey=this.value" placeholder="sk-..." class="w-full rounded-xl border border-white/15 bg-black/40 px-3 py-2 text-xs text-white" />
+            </div>
+          </div>
+        ` : ""}
+
+        ${sub === "calendar" ? `
+          <div class="glass rounded-2xl p-5">
+            <h2 class="font-semibold text-white text-sm mb-3">30-Day Content Calendar</h2>
+            <div class="grid grid-cols-2 sm:grid-cols-5 gap-2">
+              ${days.map(d => {
+                const match = state.contentItems.filter(i => i.date === d);
+                return `<div class="rounded-xl border border-white/10 bg-white/[0.02] p-2 min-h-20">
+                  <div class="text-[10px] font-mono text-slate-400">${d}</div>
+                  ${match.map(m => `<div class="mt-1 rounded bg-purple-500/25 px-1.5 py-0.5 text-[10px] text-purple-200 truncate">[${m.platform}] ${esc(m.title)}</div>`).join("")}
+                </div>`;
+              }).join("")}
+            </div>
+          </div>
+        ` : ""}
+
+        ${sub === "analytics" ? `
+          <div class="glass rounded-2xl p-5 space-y-3">
+            <div class="grid grid-cols-4 gap-3">
+              ${["DRAFT","APPROVED","SCHEDULED","PUBLISHED"].map(st => `<div class="rounded-xl bg-white/5 p-3"><div class="text-[11px] text-slate-400">${st}</div><div class="text-xl font-bold">${state.contentItems.filter(i=>i.status===st).length}</div></div>`).join("")}
+            </div>
+            <p class="text-xs text-amber-300 bg-amber-500/10 border border-amber-500/30 rounded-xl p-3">External social engagement metrics (Meta, LinkedIn, X, TikTok Insights) require OAuth API connections in the production backend and are never fabricated.</p>
+          </div>
+        ` : ""}
+
+        <!-- Content Queue -->
+        <div class="space-y-3">
+          ${state.contentItems.map((c, idx) => `
+            <div class="glass rounded-2xl p-4 space-y-2">
+              <div class="flex flex-wrap justify-between items-center gap-2">
+                <div class="flex items-center gap-2">
+                  <span class="rounded bg-blue-500/20 px-2 py-0.5 text-[10px] font-mono text-blue-300">${c.platform}</span>
+                  <span class="font-semibold text-sm text-white">${esc(c.title)}</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <input type="date" value="${c.date}" onchange="state.contentItems[${idx}].date=this.value;render()" class="rounded bg-slate-950 border border-white/15 px-2 py-1 text-xs" />
+                  <select onchange="state.contentItems[${idx}].status=this.value;render()" class="rounded bg-slate-950 border border-white/15 px-2 py-1 text-xs">
+                    ${["DRAFT","APPROVED","SCHEDULED","PUBLISHED"].map(s=>`<option ${c.status===s?"selected":""}>${s}</option>`).join("")}
+                  </select>
+                </div>
+              </div>
+              <textarea rows="3" onchange="state.contentItems[${idx}].body=this.value" class="w-full rounded-xl border border-white/10 bg-black/30 p-2.5 text-xs text-slate-200">${esc(c.body)}</textarea>
+            </div>
+          `).join("")}
+        </div>
+      </div>`;
+    }
+
+    function renderLeads() {
+      return `
+      <div class="space-y-4">
+        <h1 class="text-2xl font-bold text-white">Website Inquiries & Lead Pipeline</h1>
+        ${state.leads.map((l, idx) => `
+          <div class="glass rounded-2xl p-5 flex flex-wrap items-center justify-between gap-4">
+            <div class="space-y-1">
+              <div class="flex items-center gap-2">
+                <span class="font-bold text-white">${esc(l.name)}</span>
+                <span class="text-xs text-slate-400">(${esc(l.company)})</span>
+                <span class="rounded bg-blue-500/20 px-2 py-0.5 text-[10px] text-blue-300">${l.status}</span>
+              </div>
+              <p class="text-xs text-purple-300">${esc(l.service)} • ${esc(l.budget)} • ${esc(l.email)}</p>
+              <p class="text-xs text-slate-400">${esc(l.message)}</p>
+            </div>
+            <div class="flex items-center gap-2">
+              <select onchange="state.leads[${idx}].status=this.value;render()" class="rounded-lg bg-slate-950 border border-white/15 px-2.5 py-1.5 text-xs">
+                ${["NEW","QUALIFIED","PROPOSAL_SENT","WON","LOST"].map(s=>`<option ${l.status===s?"selected":""}>${s}</option>`).join("")}
+              </select>
+              <button onclick="createProposalFromLead('${l.id}')" class="rounded-xl grad px-3.5 py-2 text-xs font-semibold text-white cursor-pointer">Draft Proposal →</button>
+            </div>
+          </div>
+        `).join("")}
+      </div>`;
+    }
+
+    function renderServiceMenu() {
+      return `
+      <div class="space-y-6">
+        <h1 class="text-2xl font-bold text-white">Project 3A: Commercial Service Menu (12 Services)</h1>
+        <div class="grid gap-4 md:grid-cols-2">
+          ${SERVICES.map(s => `
+            <div class="glass rounded-2xl p-5 space-y-3">
+              <div class="flex justify-between items-start">
+                <div>
+                  <span class="text-[10px] font-mono text-purple-400">${s.cat}</span>
+                  <h2 class="font-bold text-white">${s.name}</h2>
+                </div>
+                <span class="text-xs font-mono text-emerald-400">From $${s.price.toLocaleString()}</span>
+              </div>
+              <p class="text-xs text-slate-300">${s.desc}</p>
+              <div class="grid grid-cols-3 gap-2 pt-2">
+                ${s.tiers.map(t => `<div class="rounded-lg bg-white/5 p-2 text-center text-[11px]"><div class="text-slate-400">${t.t}</div><div class="font-bold text-white">$${t.p.toLocaleString()}</div></div>`).join("")}
+              </div>
+            </div>
+          `).join("")}
+        </div>
+      </div>`;
+    }
+
+    function renderProposalSystem() {
+      const p = state.proposal;
+      return `
+      <div class="space-y-6">
+        <div class="no-print flex flex-wrap items-center justify-between gap-3 glass rounded-2xl p-4">
+          <div>
+            <span class="text-xs font-mono text-purple-400">${p.number} • ${p.status}</span>
+            <h1 class="text-lg font-bold text-white">Project 3B: 13-Section Editable PDF Proposal</h1>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <button onclick="signAndConvertProposal()" class="rounded-xl bg-emerald-600 px-4 py-2 text-xs font-semibold text-white cursor-pointer">Simulate Client Sign & Convert to Project</button>
+            <button onclick="window.print()" class="rounded-xl grad px-4 py-2 text-xs font-semibold text-white cursor-pointer">Export / Print PDF</button>
+          </div>
+        </div>
+
+        <div class="print-sheet glass rounded-2xl p-8 space-y-6">
+          <div class="border-b border-white/10 pb-5 space-y-2">
+            <div class="text-xs font-mono text-purple-400">01. COVER PAGE — ${p.number}</div>
+            <input value="${esc(p.projectTitle)}" onchange="state.proposal.projectTitle=this.value" class="w-full bg-transparent text-2xl font-extrabold text-white" />
+            <p class="text-xs text-slate-400">Prepared For: <strong>${esc(p.clientName)}</strong> (${esc(p.clientCompany)})</p>
+          </div>
+          ${[
+            ["02. Executive Summary", "executiveSummary", p.executiveSummary],
+            ["03. Client Business Overview", "clientOverview", p.clientOverview],
+            ["04. Identified Business Challenges", "challenges", p.challenges],
+            ["05. Proposed Solution", "solution", p.solution],
+            ["06. Project Scope", "scope", p.scope],
+            ["07. Deliverables", "deliverables", p.deliverables],
+            ["08. Implementation Timeline", "timeline", p.timeline],
+            ["11. Maintenance & Support", "maintenance", p.maintenance],
+            ["12. Terms & Conditions", "terms", p.terms]
+          ].map(([label, key, val]) => `
+            <div>
+              <h2 class="text-sm font-bold text-white mb-1.5">${label}</h2>
+              <textarea rows="2" onchange="state.proposal['${key}']=this.value" class="w-full rounded-xl border border-white/10 bg-black/25 p-2.5 text-xs text-slate-200">${esc(val)}</textarea>
+            </div>
+          `).join("")}
+
+          <div class="grid sm:grid-cols-2 gap-4 pt-2">
+            <div class="rounded-xl border border-white/10 p-4">
+              <div class="text-xs text-slate-400">09. Project Investment (USD)</div>
+              <input type="number" value="${p.investmentUsd}" onchange="state.proposal.investmentUsd=Number(this.value);render()" class="mt-1 bg-transparent text-xl font-bold text-emerald-400 w-36" />
+            </div>
+            <div class="rounded-xl border border-white/10 p-4 text-xs space-y-1">
+              <div class="font-bold text-white">10. Payment Milestones</div>
+              <div>40% Kickoff: $${Math.round(p.investmentUsd * 0.4).toLocaleString()}</div>
+              <div>30% Staging: $${Math.round(p.investmentUsd * 0.3).toLocaleString()}</div>
+              <div>30% Launch: $${Math.round(p.investmentUsd * 0.3).toLocaleString()}</div>
+            </div>
+          </div>
+
+          <div class="border-t border-white/10 pt-5 space-y-2">
+            <div class="text-xs font-bold text-white">13. Acceptance & Electronic Signature</div>
+            ${p.signedName ? `
+              <p class="text-xs text-emerald-300">Accepted & signed by <strong>${esc(p.signedName)}</strong> on ${p.signedAt}</p>
+            ` : `
+              <div class="no-print flex gap-2">
+                <input id="prop-sign-input" value="${esc(p.clientName)}" class="rounded-lg border border-white/15 bg-black/40 px-3 py-1.5 text-xs text-white" />
+                <button onclick="signAndConvertProposal()" class="rounded-lg grad px-4 py-1.5 text-xs font-semibold text-white cursor-pointer">Sign & Launch Project</button>
+              </div>
+            `}
+          </div>
+        </div>
+      </div>`;
+    }
+
+    function renderDeliveryPack() {
+      const prj = state.project;
+      const phaseDocs = prj.docs.filter(d => d.phase === state.deliveryPhase);
+      const activeDoc = prj.docs[state.selectedDocIdx] || phaseDocs[0];
+      return `
+      <div class="space-y-6">
+        <div class="no-print flex flex-wrap justify-between items-center gap-3">
+          <div>
+            <span class="text-xs font-mono text-purple-400">${prj.code} • ${prj.client}</span>
+            <h1 class="text-2xl font-bold text-white">Project 4: Client Delivery Pack (24 Docs)</h1>
+          </div>
+          <button onclick="window.print()" class="rounded-xl grad px-4 py-2 text-xs font-semibold text-white cursor-pointer">Print / Export Document PDF</button>
+        </div>
+
+        <!-- Milestones -->
+        <div class="no-print glass rounded-2xl p-4">
+          <p class="text-xs font-semibold text-white mb-2">Live Project Milestone Tracker</p>
+          <div class="grid sm:grid-cols-4 gap-2">
+            ${prj.milestones.map((m, i) => `
+              <div class="rounded-xl bg-white/5 p-3 space-y-1.5">
+                <div class="text-xs font-semibold text-white">${m.title}</div>
+                <select onchange="state.project.milestones[${i}].status=this.value;render()" class="w-full rounded bg-slate-950 border border-white/15 px-2 py-1 text-[11px]">
+                  ${["PENDING","IN_PROGRESS","AWAITING_APPROVAL","COMPLETED"].map(s=>`<option ${m.status===s?"selected":""}>${s}</option>`).join("")}
+                </select>
+              </div>
+            `).join("")}
+          </div>
+        </div>
+
+        <!-- Phase Tabs -->
+        <div class="no-print flex flex-wrap gap-2">
+          ${[["ONBOARDING","A. Onboarding (6)"],["PROJECT_MANAGEMENT","B. Project Management (6)"],["FINAL_DELIVERY","C. Final Delivery (7)"],["POST_DELIVERY","D. Post-Delivery (5)"]].map(([k,l])=>`
+            <button onclick="state.deliveryPhase='${k}';state.selectedDocIdx=state.project.docs.findIndex(d=>d.phase==='${k}');render()" class="rounded-xl px-3.5 py-2 text-xs font-semibold cursor-pointer ${state.deliveryPhase===k?"grad text-white":"bg-white/5 text-slate-300"}">${l}</button>
+          `).join("")}
+        </div>
+
+        <div class="grid lg:grid-cols-12 gap-5">
+          <div class="no-print lg:col-span-4 space-y-1.5">
+            ${phaseDocs.map(d => `
+              <button onclick="state.selectedDocIdx=${d.id};render()" class="w-full text-left rounded-xl p-3 text-xs cursor-pointer ${activeDoc.id===d.id?"bg-purple-500/20 border border-purple-500/50 text-white":"bg-white/5 text-slate-300"}">
+                <div class="font-semibold">${d.title}</div>
+                <div class="text-[10px] text-slate-400 mt-0.5">${d.status}</div>
+              </button>
+            `).join("")}
+          </div>
+
+          <div class="lg:col-span-8 print-sheet glass rounded-2xl p-6 space-y-4">
+            <div class="flex justify-between items-center">
+              <h2 class="font-bold text-white">${activeDoc.title}</h2>
+              <select onchange="state.project.docs[${activeDoc.id}].status=this.value;render()" class="no-print rounded bg-slate-950 border border-white/15 px-2 py-1 text-xs">
+                ${["DRAFT","SENT_TO_CLIENT","CLIENT_COMPLETED","APPROVED"].map(s=>`<option ${activeDoc.status===s?"selected":""}>${s}</option>`).join("")}
+              </select>
+            </div>
+            <div class="rounded-xl bg-blue-500/10 border border-blue-500/20 p-3 text-xs text-blue-200"><strong>Instructions:</strong> ${activeDoc.instructions}</div>
+            <textarea rows="10" onchange="state.project.docs[${activeDoc.id}].content=this.value" class="w-full rounded-xl border border-white/10 bg-black/30 p-3 text-xs font-mono text-slate-200">${esc(activeDoc.content)}</textarea>
+            ${activeDoc.requiresSig ? `<div class="border-t border-white/10 pt-3 text-xs text-slate-400">Approval Signature Field: _____________________________</div>` : ""}
+          </div>
+        </div>
+
+        <!-- Interactive Post-Delivery Survey -> Publishes to Public Website Testimonials -->
+        <form onsubmit="submitSurvey(event)" class="no-print glass rounded-2xl p-6 space-y-3">
+          <h2 class="font-bold text-white text-sm">Interactive Client Satisfaction Survey (Syncs Live to Website Testimonials)</h2>
+          <div class="grid sm:grid-cols-3 gap-3">
+            <input name="clientName" required value="${esc(state.proposal.clientName)}" placeholder="Client Name" class="rounded-xl border border-white/15 bg-black/40 px-3 py-2 text-xs text-white" />
+            <input name="clientRole" required value="Founder & Managing Partner" placeholder="Role / Title" class="rounded-xl border border-white/15 bg-black/40 px-3 py-2 text-xs text-white" />
+            <select name="rating" class="rounded-xl border border-white/15 bg-slate-950 px-3 py-2 text-xs text-white">
+              <option value="5">5 Stars — Exceptional</option>
+              <option value="4">4 Stars — Very Good</option>
+            </select>
+          </div>
+          <textarea name="quote" required rows="2" placeholder="Write honest client review..." class="w-full rounded-xl border border-white/15 bg-black/40 px-3 py-2 text-xs text-white">Clear milestones, structured handover docs, and fast automated lead handling from day one.</textarea>
+          <button type="submit" class="rounded-xl bg-emerald-600 px-5 py-2 text-xs font-semibold text-white cursor-pointer">Submit & Publish to Website Testimonials</button>
+        </form>
+      </div>`;
+    }
+
+    function render() {
+      const bSite = document.getElementById("btn-mode-site");
+      const bDash = document.getElementById("btn-mode-dash");
+      bSite.className = "rounded-lg px-3.5 py-1.5 text-xs font-semibold transition cursor-pointer " + (state.mode === "website" ? "grad text-white" : "text-slate-300 hover:text-white");
+      bDash.className = "rounded-lg px-3.5 py-1.5 text-xs font-semibold transition cursor-pointer " + (state.mode === "dashboard" ? "grad text-white" : "text-slate-300 hover:text-white");
+      document.getElementById("app").innerHTML = state.mode === "website" ? renderWebsite() : renderDashboard();
+    }
+
+    render();
+  </script>
+</body>
+</html>
